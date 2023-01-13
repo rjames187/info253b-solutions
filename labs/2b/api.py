@@ -1,5 +1,3 @@
-db = {}
-
 def set_item(db, key, value):
     db[key] = value
 
