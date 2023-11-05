@@ -33,4 +33,14 @@ def get_task(id):
 def delete_task(id):
   del db[id]
   return None, 204
+
+@app.route('/v1/tasks/<id>', methods=['PUT'])
+def edit_task(id):
+  data = request.get_json()
+  t = db[id]
+  if 'title' in data:
+    t['title'] = data['title']
+  if 'is_completed' in data:
+    t['is_completed'] = data['is_completed']
+  return None, 204
       
