@@ -23,3 +23,10 @@ def create_task():
 def list_tasks():
   response = { 'tasks': db['tasks'] }
   return response, 200
+
+@app.route('/v1/tasks/<id>', methods=['GET'])
+def get_task(id):
+  for t in db['tasks']:
+    if t['id'] == id:
+      return t, 200
+  return { 'error': 'There is no task at that id' }, 404
