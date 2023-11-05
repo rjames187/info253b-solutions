@@ -30,3 +30,12 @@ def get_task(id):
     if t['id'] == id:
       return t, 200
   return { 'error': 'There is no task at that id' }, 404
+
+@app.route('/v1/tasks/<id>', methods=['DELETE'])
+def delete_task(id):
+  for i in range(len(db['tasks'])):
+    t = db['tasks'][i]
+    if t['id'] == id:
+      db['tasks'].pop(i)
+      return None, 204
+      
