@@ -18,3 +18,8 @@ def create_task():
   cur_id += 1
   db['tasks'].append(task)
   return { 'id': task['id'] }, 201
+
+@app.route('/v1/tasks', methods=['GET'])
+def list_tasks():
+  response = { 'tasks': db['tasks'] }
+  return response, 200
