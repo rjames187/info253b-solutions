@@ -12,7 +12,7 @@ def create_task():
   task = {}
   task['title'] = data['title']
   task['is_completed'] = data['is_completed'] if 'is_completed' in data else False
-  task['id'] = cur_id
+  task['id'] = str(cur_id)
   db[cur_id] = task
   response = { 'id': cur_id }
   cur_id += 1
@@ -36,6 +36,8 @@ def delete_task(id):
 
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
+  if not id in db:
+    return { 'error': 'There is no task at that id' }, 404
   data = request.get_json()
   t = db[id]
   if 'title' in data:
