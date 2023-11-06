@@ -3,19 +3,19 @@ import json
 
 app = Flask(__name__)
 
-cur_id = [1]
 db = {}
 
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():
+  cur_id = len(db) + 1
   data = request.get_json()
   task = {}
   task['title'] = data['title']
   task['is_completed'] = data['is_completed'] if 'is_completed' in data else False
-  task['id'] = cur_id[0]
-  db[str(cur_id[0])] = task
-  response = { 'id': cur_id[0] }
-  cur_id[0] += 1
+  task['id'] = cur_id
+  db[str(cur_id)] = task
+  response = { 'id': cur_id }
+  cur_id += 1
   return response, 201
 
 @app.route('/v1/tasks', methods=['GET'])
