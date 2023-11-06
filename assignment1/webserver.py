@@ -9,8 +9,12 @@ model = database()
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():
   data = request.get_json()
-  response = model.add_task(data)
-  return response, 201
+  if not 'tasks' in data:
+    return model.add_task(data), 201
+  res = []
+  for t in data['tasks']:
+    res.append(model.add_task(t))
+  return { 'tasks': res }, 201
 
 @app.route('/v1/tasks', methods=['GET'])
 def list_tasks():
@@ -29,6 +33,14 @@ def get_task(id):
 def delete_task(id):
   model.delete_task(id)
   return {}, 204
+
+@app.route('/v1/tasks', methods=['DELETE'])
+def delete_bulk_task():
+  data = request.get_json()
+  for obj in data['tasks']:
+    model.delete_task(obj['id'])
+  return {}, 204
+
 
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
