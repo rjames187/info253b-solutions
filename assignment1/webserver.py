@@ -3,7 +3,7 @@ import json
 
 app = Flask(__name__)
 
-cur_id = 1
+cur_id = [1]
 db = {}
 
 @app.route('/v1/tasks', methods=['POST'])
@@ -12,10 +12,10 @@ def create_task():
   task = {}
   task['title'] = data['title']
   task['is_completed'] = data['is_completed'] if 'is_completed' in data else False
-  task['id'] = str(cur_id)
-  db[cur_id] = task
-  response = { 'id': cur_id }
-  cur_id += 1
+  task['id'] = cur_id[0]
+  db[str(cur_id[0])] = task
+  response = { 'id': cur_id[0] }
+  cur_id[0] += 1
   return response, 201
 
 @app.route('/v1/tasks', methods=['GET'])
@@ -32,7 +32,7 @@ def get_task(id):
 @app.route('/v1/tasks/<id>', methods=['DELETE'])
 def delete_task(id):
   del db[id]
-  return None, 204
+  return {}, 204
 
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
@@ -44,5 +44,5 @@ def edit_task(id):
     t['title'] = data['title']
   if 'is_completed' in data:
     t['is_completed'] = data['is_completed']
-  return None, 204
+  return {}, 204
       
