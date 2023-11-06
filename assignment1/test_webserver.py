@@ -27,6 +27,18 @@ def test_update_task():
     r = requests.put('http://localhost:5000/v1/tasks/1', json={"title": "My 1st Task", "is_completed": True})
     assert not r.content
 
+def test_get_updated_task():
+    r = requests.get('http://localhost:5000/v1/tasks/1')
+    assert r.json()["is_completed"]
+
 def test_delete_task():
     r = requests.delete('http://localhost:5000/v1/tasks/1')
     assert not r.content
+
+def test_get_missing_task():
+    r = requests.get('http://localhost:5000/v1/tasks/1')
+    assert r.status_code == 404
+
+def test_edit_missing_task():
+    r = requests.put('http://localhost:5000/v1/tasks/1', json={})
+    assert r.status_code == 404
