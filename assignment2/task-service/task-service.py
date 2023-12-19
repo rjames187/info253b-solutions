@@ -1,19 +1,26 @@
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
+from model import model
 import json
-from model import database
 
+m = model()
 app = Flask(__name__)
-
-model = database()
+db = SQLAlchemy()
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@db:5432/task-db"
+db.init_app(app)
 
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():
   data = request.get_json()
   if not 'tasks' in data:
-    return model.add_task(data), 201
+    stmt = m.create(data)
+    result = db.session.execute(stmt).all()
+    return json.dumps(result[0]), 201
   res = []
   for t in data['tasks']:
-    res.append(model.add_task(t))
+    stmt = m.create(t)
+    result = db.session.execute(stmt).all()
+    res.append(result)
   return { 'tasks': res }, 201
 
 @app.route('/v1/tasks', methods=['GET'])
