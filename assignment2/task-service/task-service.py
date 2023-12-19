@@ -50,14 +50,16 @@ def get_task(id):
 
 @app.route('/v1/tasks/<id>', methods=['DELETE'])
 def delete_task(id):
-  model.delete_task(id)
+  stmt = qf.delete(id)
+  db.session.execute(stmt).all()
   return {}, 204
 
 @app.route('/v1/tasks', methods=['DELETE'])
 def delete_bulk_task():
   data = request.get_json()
   for obj in data['tasks']:
-    model.delete_task(obj['id'])
+    stmt = qf.delete(obj['id'])
+    db.session.execute(stmt).all()
   return {}, 204
 
 

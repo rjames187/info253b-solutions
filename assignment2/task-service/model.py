@@ -15,3 +15,7 @@ class QueryFactory:
     stmt = text("SELECT * FROM tasks WHERE id = :x")
     stmt = stmt.bind_params(x=id)
     return stmt
+  def delete(id: int):
+    stmt = text("DELETE FROM tasks WHERE id = :x")
+    stmt = stmt.bind_params(x=id)
+    return stmt
