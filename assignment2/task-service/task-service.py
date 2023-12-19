@@ -11,7 +11,7 @@ db.init_app(app)
 
 # renames 'task' column to 'title'
 def polish(task):
-  if 'task' in task:
+  if task and 'task' in task:
     title = task['task']
     del task['task']
     task['title'] = title
@@ -23,26 +23,30 @@ def create_task():
   if not 'tasks' in data:
     stmt = qf.create(data)
     result = db.session.execute(stmt).all()
+    result = polish(result)
     return json.dumps(result[0]), 201
   res = []
   for t in data['tasks']:
     stmt = qf.create(t)
     result = db.session.execute(stmt).all()
+    result = polish(result)
     res.append(result)
   return { 'tasks': res }, 201
 
 @app.route('/v1/tasks', methods=['GET'])
 def list_tasks():
-  db = model.db
-  response = { 'tasks': list(db.values()) }
+  stmt = qf.get_all()
+  result = db.session.execute(stmt).all()
+  response = { 'tasks': polish(result) }
   return response, 200
 
 @app.route('/v1/tasks/<id>', methods=['GET'])
 def get_task(id):
-  db = model.db
-  if id in db:
-    return db[id], 200
-  return { 'error': 'There is no task at that id' }, 404
+  stmt = qf.get(id)
+  result = db.session.execute(stmt).all()
+  if not result:
+    return { 'error': 'There is no task at that id' }, 404
+  return polish(result), 200
 
 @app.route('/v1/tasks/<id>', methods=['DELETE'])
 def delete_task(id):
