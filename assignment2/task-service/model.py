@@ -19,3 +19,12 @@ class QueryFactory:
     stmt = text("DELETE FROM tasks WHERE id = :x")
     stmt = stmt.bind_params(x=id)
     return stmt
+  def put(id: int, data):
+    if len(data) == 0:
+      return None
+    task = data['title']
+    is_completed = data['is_completed']
+    stmt = text("UPDATE tasks SET task = :x, SET is_completed = :y WHERE id = :z")
+    stmt.bind_params(x=task, y=is_completed, z=id)
+    return stmt
+    

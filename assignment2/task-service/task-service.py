@@ -65,14 +65,10 @@ def delete_bulk_task():
 
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
-  db = model.db
-  if not id in db:
-    return { 'error': 'There is no task at that id' }, 404
   data = request.get_json()
-  t = db[id]
-  if 'title' in data:
-    t['title'] = data['title']
-  if 'is_completed' in data:
-    t['is_completed'] = data['is_completed']
+  stmt = qf.put(id, data)
+  result = db.session.execute(stmt).all()
+  if not result:
+    return { 'error': 'There is no task at that id' }, 404
   return {}, 204
       
