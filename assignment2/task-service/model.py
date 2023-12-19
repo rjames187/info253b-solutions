@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-class model:
+class QueryFactory:
   def __init__(self):
     pass
   def create(task: dict):

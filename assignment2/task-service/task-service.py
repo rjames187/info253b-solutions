@@ -1,24 +1,32 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from model import model
+from model import QueryFactory
 import json
 
-m = model()
+qf = QueryFactory()
 app = Flask(__name__)
 db = SQLAlchemy()
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@db:5432/task-db"
 db.init_app(app)
 
+# renames 'task' column to 'title'
+def polish(task):
+  if 'task' in task:
+    title = task['task']
+    del task['task']
+    task['title'] = title
+  return task
+
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():
   data = request.get_json()
   if not 'tasks' in data:
-    stmt = m.create(data)
+    stmt = qf.create(data)
     result = db.session.execute(stmt).all()
     return json.dumps(result[0]), 201
   res = []
   for t in data['tasks']:
-    stmt = m.create(t)
+    stmt = qf.create(t)
     result = db.session.execute(stmt).all()
     res.append(result)
   return { 'tasks': res }, 201
