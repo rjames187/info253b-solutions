@@ -42,14 +42,13 @@ def create_task():
     )
     db.session.add(task)
     db.session.commit()
-    res['tasks'].append({ "id", task.id })
+    res['tasks'].append({ "id": task.id })
   return res, 201
 
   
 
 @app.route('/v1/tasks', methods=['GET'])
 def list_tasks():
-  print("hello")
   tasks = db.session.execute(db.select(Task)).all()
   res = []
   for row in tasks:
@@ -59,7 +58,7 @@ def list_tasks():
 @app.route('/v1/tasks/<id>', methods=['GET'])
 def get_task(id):
   tasks = db.session.execute(db.select(Task).where(Task.id == id)).all()
-  if not len(tasks) == 0:
+  if len(tasks) == 0:
     return { 'error': 'There is no task at that id' }, 404
   row = tasks[0]
   return map_row_to_dict(row), 200
@@ -78,6 +77,7 @@ def delete_bulk_task():
   for obj in data['tasks']:
     ids.append(obj['id'])
   db.session.execute(db.delete(Task).where(Task.id.in_(ids)))
+  db.session.commit()
   return {}, 204
 
 
@@ -90,5 +90,6 @@ def edit_task(id):
   task_name = data["title"]
   completed = data["is_completed"]
   db.session.execute(db.update(Task).where(Task.id == id).values(task=task_name, is_completed=completed))
+  db.session.commit()
   return {}, 204
       
