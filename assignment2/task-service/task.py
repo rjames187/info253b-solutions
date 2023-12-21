@@ -41,7 +41,7 @@ def create_task():
   for t in data['tasks']:
     task = Task(
       task=t["title"],
-      is_completed=True if "is_completed" in t and t["is_completed"] else False
+      is_completed=True if "is_completed" in t and t["is_completed"] else False,
       notify = t["notify"] if "notify" in t else None
     )
     db.session.add(task)

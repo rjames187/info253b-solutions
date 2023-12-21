@@ -1,7 +1,11 @@
 version: "3.7"
 services:
+  broker:
+    image: redis:latest
+    container_name: job_broker
   db:
     image: postgres:latest
+    container_name: task_db
     volumes:
       - postgres-volume:/var/lib/postgresql/data
       - ./init.db.sql:/docker-entrypoint-initdb.d/init.db.sql
@@ -12,9 +16,17 @@ services:
   task_service:
     build: ./task-service
     image: task-service-image
+    container_name: task_service
     ports:
       - "5050:5000"
     environment:
       PYTHONUNBUFFERED: 1
+  job_worker:
+    build: ./job_worker/.
+    container_name: job_worker
+    environment:
+      CELERY_BROKER_URL: redis://job_broker:6379
+    depends_on:
+      - job_broker
 volumes:
   postgres-volume: {}
