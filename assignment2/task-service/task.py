@@ -22,16 +22,12 @@ def create_task():
   data = request.get_json()
   if not 'tasks' in data:
     stmt = qf.create(data)
-    result = db.session.execute(stmt).all()
-    result = polish(result)
-    return json.dumps(result[0]), 201
+    db.session.execute(stmt)
   res = []
   for t in data['tasks']:
     stmt = qf.create(t)
-    result = db.session.execute(stmt).all()
-    result = polish(result)
-    res.append(result)
-  return { 'tasks': res }, 201
+    db.session.execute(stmt)
+  
 
 @app.route('/v1/tasks', methods=['GET'])
 def list_tasks():
