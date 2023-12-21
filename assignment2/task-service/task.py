@@ -14,6 +14,7 @@ class Task(db.Model):
   id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
   task: Mapped[str] = mapped_column(db.String)
   is_completed: Mapped[bool] = mapped_column(db.Boolean)
+  notify: Mapped[str] = mapped_column(db.String)
 
 def map_row_to_dict(row):
   res = {}
@@ -27,9 +28,11 @@ def create_task():
   data = request.get_json()
   if not 'tasks' in data:
     completed = True if "is_completed" in data and data["is_completed"] else False
+    email = data["notify"] if "notify" in data else None
     task = Task(
       task=data["title"],
-      is_completed=completed
+      is_completed=completed,
+      notify=email
     )
     db.session.add(task)
     db.session.commit()
@@ -39,6 +42,7 @@ def create_task():
     task = Task(
       task=t["title"],
       is_completed=True if "is_completed" in t and t["is_completed"] else False
+      notify = t["notify"] if "notify" in t else None
     )
     db.session.add(task)
     db.session.commit()
