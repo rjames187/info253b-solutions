@@ -14,5 +14,7 @@ services:
     image: task-service-image
     ports:
       - "5050:5000"
+    environment:
+      PYTHONUNBUFFERED: 1
 volumes:
   postgres-volume: {}

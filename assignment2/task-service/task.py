@@ -1,70 +1,94 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from model import QueryFactory
+from sqlalchemy import Boolean, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 import json
 
-qf = QueryFactory()
 app = Flask(__name__)
 db = SQLAlchemy()
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@db:5432/task-db"
 db.init_app(app)
 
-# renames 'task' column to 'title'
-def polish(task):
-  if task and 'task' in task:
-    title = task['task']
-    del task['task']
-    task['title'] = title
-  return task
+class Task(db.Model):
+  __tablename__ = "tasks"
+  id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
+  task: Mapped[str] = mapped_column(db.String)
+  is_completed: Mapped[bool] = mapped_column(db.Boolean)
+
+def map_row_to_dict(row):
+  res = {}
+  res["id"] = row[0].id
+  res["title"] = row[0].task
+  res["is_completed"] = row[0].is_completed
+  return res
 
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():
   data = request.get_json()
   if not 'tasks' in data:
-    stmt = qf.create(data)
-    db.session.execute(stmt)
-  res = []
+    completed = True if "is_completed" in data and data["is_completed"] else False
+    task = Task(
+      task=data["title"],
+      is_completed=completed
+    )
+    db.session.add(task)
+    db.session.commit()
+    return { "id": task.id }, 201
+  res = { "tasks": [] }  
   for t in data['tasks']:
-    stmt = qf.create(t)
-    db.session.execute(stmt)
+    task = Task(
+      task=t["title"],
+      is_completed=True if "is_completed" in t and t["is_completed"] else False
+    )
+    db.session.add(task)
+    db.session.commit()
+    res['tasks'].append({ "id", task.id })
+  return res, 201
+
   
 
 @app.route('/v1/tasks', methods=['GET'])
 def list_tasks():
-  stmt = qf.get_all()
-  result = db.session.execute(stmt).all()
-  response = { 'tasks': polish(result) }
-  return response, 200
+  print("hello")
+  tasks = db.session.execute(db.select(Task)).all()
+  res = []
+  for row in tasks:
+    res.append(map_row_to_dict(row))
+  return { 'tasks': res }, 200
 
 @app.route('/v1/tasks/<id>', methods=['GET'])
 def get_task(id):
-  stmt = qf.get(id)
-  result = db.session.execute(stmt).all()
-  if not result:
+  tasks = db.session.execute(db.select(Task).where(Task.id == id)).all()
+  if not len(tasks) == 0:
     return { 'error': 'There is no task at that id' }, 404
-  return polish(result), 200
+  row = tasks[0]
+  return map_row_to_dict(row), 200
 
 @app.route('/v1/tasks/<id>', methods=['DELETE'])
 def delete_task(id):
-  stmt = qf.delete(id)
-  db.session.execute(stmt).all()
+  task = db.get_or_404(Task, id)
+  db.session.delete(task)
+  db.session.commit()
   return {}, 204
 
 @app.route('/v1/tasks', methods=['DELETE'])
 def delete_bulk_task():
   data = request.get_json()
+  ids = []
   for obj in data['tasks']:
-    stmt = qf.delete(obj['id'])
-    db.session.execute(stmt).all()
+    ids.append(obj['id'])
+  db.session.execute(db.delete(Task).where(Task.id.in_(ids)))
   return {}, 204
 
 
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
   data = request.get_json()
-  stmt = qf.put(id, data)
-  result = db.session.execute(stmt).all()
-  if not result:
+  task = db.session.execute(db.select(Task).where(Task.id == id)).all()
+  if not task:
     return { 'error': 'There is no task at that id' }, 404
+  task_name = data["title"]
+  completed = data["is_completed"]
+  db.session.execute(db.update(Task).where(Task.id == id).values(task=task_name, is_completed=completed))
   return {}, 204
       
