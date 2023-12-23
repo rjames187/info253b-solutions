@@ -2,12 +2,18 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
+from redis import Redis
+from rq import Queue
+from email_job import send_email
 import json
 
 app = Flask(__name__)
 db = SQLAlchemy()
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:postgres@db:5432/task-db"
 db.init_app(app)
+
+redis_conn = Redis(host='broker', port=6379)
+q = Queue(connection=redis_conn)
 
 class Task(db.Model):
   __tablename__ = "tasks"
@@ -22,6 +28,13 @@ def map_row_to_dict(row):
   res["title"] = row[0].task
   res["is_completed"] = row[0].is_completed
   return res
+
+@app.route('/test/<email>', methods=['GET'])
+def run_task(email):
+  q.enqueue(send_email, "funny@cool.com")
+  print('email task was enqueued!')
+  return {}, 200
+
 
 @app.route('/v1/tasks', methods=['POST'])
 def create_task():

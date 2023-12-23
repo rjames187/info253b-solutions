@@ -3,6 +3,7 @@ services:
   broker:
     image: redis:latest
     container_name: job_broker
+
   db:
     image: postgres:latest
     container_name: task_db
@@ -13,20 +14,30 @@ services:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: task-db
+
   task_service:
     build: ./task-service
     image: task-service-image
     container_name: task_service
+    volumes:
+      - ./email-job/email_job.py:/app/email_job.py
     ports:
       - "5050:5000"
     environment:
       PYTHONUNBUFFERED: 1
-  job_worker:
-    build: ./job_worker/.
-    container_name: job_worker
-    environment:
-      CELERY_BROKER_URL: redis://job_broker:6379
     depends_on:
-      - job_broker
+      - db
+      - broker
+      - job_worker
+
+  job_worker:
+    build: ./email-worker/.
+    container_name: email_worker
+    volumes:
+      - ./email-job/email_job.py:/app/email_job.py
+    environment:
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - broker
 volumes:
   postgres-volume: {}
