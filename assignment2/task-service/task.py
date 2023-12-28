@@ -29,11 +29,9 @@ def map_row_to_dict(row):
   res["is_completed"] = row[0].is_completed
   return res
 
-@app.route('/test/<email>', methods=['GET'])
-def run_task(email):
-  q.enqueue(send_email, "funny@cool.com")
-  print('email task was enqueued!')
-  return {}, 200
+def run_task(address):
+  q.enqueue(send_email, address)
+  print(f'email task was enqueued with address {address}!')
 
 
 @app.route('/v1/tasks', methods=['POST'])
@@ -101,12 +99,15 @@ def delete_bulk_task():
 @app.route('/v1/tasks/<id>', methods=['PUT'])
 def edit_task(id):
   data = request.get_json()
-  task = db.session.execute(db.select(Task).where(Task.id == id)).all()
-  if not task:
+  tasks = db.session.execute(db.select(Task).where(Task.id == id)).all()
+  if not tasks:
     return { 'error': 'There is no task at that id' }, 404
+  prev_completed = tasks[0][0].is_completed
   task_name = data["title"]
   completed = data["is_completed"]
   db.session.execute(db.update(Task).where(Task.id == id).values(task=task_name, is_completed=completed))
   db.session.commit()
+  if completed and not prev_completed:
+    run_task(tasks[0][0].notify)
   return {}, 204
       
