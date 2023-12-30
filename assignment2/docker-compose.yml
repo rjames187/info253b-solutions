@@ -37,6 +37,8 @@ services:
       - ./email-job/email_job.py:/app/email_job.py
     environment:
       PYTHONUNBUFFERED: 1
+      API_KEY: ${API_KEY}
+      DOMAIN: ${DOMAIN}
     depends_on:
       - broker
 volumes:
